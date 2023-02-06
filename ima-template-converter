@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+IMA_POLICY_TEMPLATE=/etc/ima/ima-policy.template
+IMA_POLICY=/etc/ima/ima-policy
+
+if [ -f "${IMA_POLICY_TEMPLATE}" ] && [ -f "${IMA_POLICY}" ] && \
+   [ "${IMA_POLICY_TEMPLATE}" -nt "${IMA_POLICY}" ] ; then
+	blkid_label_root="$(lsblk -o mountpoint,uuid | awk '$1=="/" {print $2}')"
+	sed -s "s/%blkid_label_root%/${blkid_label_root}/g" \
+		"${IMA_POLICY_TEMPLATE}" > "${IMA_POLICY}.new"
+	if cat "${IMA_POLICY}".new > /sys/kernel/security/ima/policy; then
+		mv "${IMA_POLICY}.new" "${IMA_POLICY}"
+	fi
+fi
